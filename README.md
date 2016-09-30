@@ -1,1 +1,1 @@
-# scrapenyt
+# Scrape New York Times Wedding Announcements
