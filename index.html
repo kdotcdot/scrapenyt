@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head><script src="jquery-3.1.1.js"></script></head>
+<body>
+
+<h1>Wedding Count</h1>
+<p id="weddingCount"></p>
+<h1>Meeting Ways</h1>
+<p id="meeting"></p>
+<h1>Career Types</h1>
+<p id="careertypes"></p>
+<h1>List of all Announcements</h1>
+<p id="demo"></p>
+
+<script>
+
+// Pull the data from the NYT
+	var countOfWeddings = 0; 
+	var artCount = 0; 
+	var dataPull = '';
+	var dataPullContinuous = '';
+	var dataDesc = ''; 
+	var returnData = ''; 
+	var setup_careers = ["The bride", "The groom", "the groom", "the bride", "weds"];
+	var setup_meet = ["met", "were introduced"];
+	var fillerwords = ["The", "he", "was", "with", "were", "who", "she", "will", "their", "&", "that", "weds", "her", "when", "while", "graduated", "work", "are", "as", "but", "by", "each", "the", "a", "is", "bride", "groom", "at", "and", "in", "met", "for", "of", "an", "works", "from", "they", "which", "on", "to", "both"];
+	var careers = [];
+	var meet = [];
+	var analyzeData = '';
+	var analyzeData1 = '';
+
+// Return a single 
+	function returndataPull(url, year1, year2){
+		$.ajax({
+		  url: url,
+		  method: 'GET',
+		}).done(function(result) {
+	
+			for (artCount = 0; artCount <= result.response.docs.length - 1; artCount++) {
+				if (result.response.docs[artCount].subsection_name = "Weddings") {
+				//ID | Headline | Snippet | URL | Date
+					dataPull = dataPull + '<br> ' + (countOfWeddings + 1) + ' | ' + result.response.docs[artCount]._id + ' | ' + result.response.docs[artCount].headline.main + ' | ' + result.response.docs[artCount].snippet + ' | ' + result.response.docs[artCount].web_url + ' | ' + result.response.docs[artCount].pub_date;
+					dataDesc = dataDesc + result.response.docs[artCount].snippet + ' ' 
+					dataPullContinuous = dataPullContinuous + ' | ' + result.response.docs[artCount]._id + ' | ' + result.response.docs[artCount].headline.main + ' | ' + result.response.docs[artCount].snippet + ' | ' + result.response.docs[artCount].web_url + ' | ' + result.response.docs[artCount].pub_date;
+					countOfWeddings ++; 
+				}
+			}
+			
+			// Print this to the page
+			document.getElementById("weddingCount").innerHTML = "<p>From 1/1/" + year1 + " to 12/31/" + year2 + ", there were " + countOfWeddings + " wedding announcements." ;
+		//	document.getElementById("demo").innerHTML = dataPull; 
+			
+			// Prepare text for parsing
+			analyzeData = dataDesc.replace(/;/g, " BREAK").replace(/\./g, " BREAK").replace(/,/g , "").split(" ");
+
+	//		console.log(analyzeData.length);
+			
+			careers = [];
+			for(var i = 0; i <= analyzeData.length; i++) {
+				// What they each do: Careers
+					if(setup_careers.indexOf(analyzeData[i]) > -1) {
+						careers.push(analyzeData.slice(i, analyzeData.indexOf("BREAK", i)).join(' '));
+						i = analyzeData.indexOf("BREAK", i);
+					} 
+					else if(setup_careers.indexOf(analyzeData[i] + " " + analyzeData[i+1]) > -1){
+						careers.push(analyzeData.slice(i, analyzeData.indexOf("BREAK", i)).join(' '));
+						i = analyzeData.indexOf("BREAK", i);
+					}
+					else if(setup_careers.indexOf(analyzeData[i] + " " + analyzeData[i+1] + " " + analyzeData[i+2]) > -1){
+						careers.push(analyzeData.slice(i, analyzeData.indexOf("BREAK", i)).join(' '));
+						i = analyzeData.indexOf("BREAK", i);
+					}
+					else if(setup_careers.indexOf(analyzeData[i] + " " + analyzeData[i+1] + " " + analyzeData[i+2] + " " + analyzeData[i+3]) > -1){
+						careers.push(analyzeData.slice(i, analyzeData.indexOf("BREAK", i)).join(' '));
+						i = analyzeData.indexOf("BREAK", i);
+					}
+			}
+			
+			meet = [];
+			for(var i = 0; i <= analyzeData.length; i++) {
+				// How they met: Meet
+					if(setup_meet.indexOf(analyzeData[i]) > -1) {
+						meet.push(analyzeData.slice(i, analyzeData.indexOf("BREAK", i)).join(' '));
+					} 
+					else if(setup_meet.indexOf(analyzeData[i] + " " + analyzeData[i+1]) > -1){
+						meet.push(analyzeData.slice(i, analyzeData.indexOf("BREAK", i)).join(' '));
+						console.log(i + analyzeData.slice(i, analyzeData.indexOf("BREAK", i)).join(' '));	
+					}
+					else if(setup_meet.indexOf(analyzeData[i] + " " + analyzeData[i+1] + " " + analyzeData[i+2]) > -1){
+						meet.push(analyzeData.slice(i, analyzeData.indexOf("BREAK", i)).join(' '));
+					}
+					else if(setup_meet.indexOf(analyzeData[i] + " " + analyzeData[i+1] + " " + analyzeData[i+2] + " " + analyzeData[i+3]) > -1){
+						meet.push(analyzeData.slice(i, analyzeData.indexOf("BREAK", i)).join(' '));
+					}
+			}
+			
+		//	console.log(careers);
+		//	console.log(meet);
+			
+			document.getElementById("meeting").innerHTML = "<table>" + generateTable(wordCount((meet.join(' ')).split(" "))) + "</table>";	
+			document.getElementById("careertypes").innerHTML = "<table>" + generateTable(wordCount((careers.join(' ')).split(" "))) + "</table>";	
+					
+		}).fail(function(err) {
+		  throw err;
+		});
+	}
+	
+// Function to analyze word occurrence 
+	function wordCount(arr) {
+		var a = [], b = [], prev;
+
+		arr.sort();
+		for ( var k = 0; k < arr.length; k++ ) {
+			if ( arr[k] !== prev ) {
+				a.push(arr[k]);
+				b.push(1);
+			} else {
+				b[b.length-1]++;
+			}
+			prev = arr[k];
+    	}
+    	return [a, b];
+	}
+	
+// Function to generate table
+	function generateTable([arr1, arr2]){
+		var htmlTable = '<tr>'; 
+		var tr = "<tr>";
+		var tre = "</tr>";
+		var th = "<th>";
+		var the = "</th>";
+
+		for (var i = 0; i < arr1.length; i++){
+			if (fillerwords.indexOf(arr1[i]) > -1) {}
+			else {
+				htmlTable = htmlTable + tr + th + arr1[i] + the + th + arr2[i] + the + tre;
+			}
+		}
+		//console.log(htmlTable);
+		return htmlTable; 
+	}
+
+// Rotate through page numbers to call it
+function generateURL(year1, year2){
+	while (year1 <= year2) {
+		for (var pageNum = 0; pageNum < 500; pageNum++){
+			var urlBuild = "https://api.nytimes.com/svc/search/v2/articlesearch.json";
+			urlBuild += '?' + $.param({
+			  'api-key': "ca968df3c07444b68ee85984491e179f",
+			  'fq': "news_desk:(\"Society\")",
+			  'begin_date': year1 + "0101",
+			  'end_date': year1 + "0701",
+			  'sort': "oldest",
+			  'page': pageNum
+			});
+			returndataPull(urlBuild, year1, year2);
+		}
+		for (var pageNum = 0; pageNum < 500; pageNum++){
+			var urlBuild = "https://api.nytimes.com/svc/search/v2/articlesearch.json";
+			urlBuild += '?' + $.param({
+			  'api-key': "ca968df3c07444b68ee85984491e179f",
+			  'fq': "news_desk:(\"Society\")",
+			  'begin_date': year1 + "0731",
+			  'end_date': year1 + "1231",
+			  'sort': "oldest",
+			  'page': pageNum
+			});
+			
+			returndataPull(urlBuild, year1, year2);
+		}
+		year1++;
+	}
+}
+
+// Pull multiple years
+	generateURL(2014, 2014);
+		
+</script>
+
+</body>
+</html>
